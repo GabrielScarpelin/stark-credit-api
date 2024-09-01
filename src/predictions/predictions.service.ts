@@ -3,38 +3,27 @@ import { CreatePredictionDto } from './dto/create-prediction.dto';
 import { PythonModelProcessService } from 'src/python-model-process/python-model-process.service';
 import { SocketService } from 'src/socket/socket.service';
 import { SocketGateway } from 'src/socket/socket.gateway';
+import { PluginsService } from 'src/plugins/plugins.service';
 
+const CREDENTIALS = {};
 @Injectable()
 export class PredictionsService {
   constructor(
     private readonly pythonModelProcessService: PythonModelProcessService,
     private readonly socketGetaway: SocketGateway,
+    private readonly pluginsService: PluginsService,
   ) {}
 
   async create(
     createPredictionDto: CreatePredictionDto,
     files: Array<Express.Multer.File>,
   ) {
-    console.log(files);
-    createPredictionDto;
-    this.pythonModelProcessService
-      .runPythonModelProcess()
-      .then((data) => {
-        this.socketGetaway.emitMessage(
-          'aiFinished',
-          'python',
-          createPredictionDto.socketId,
-        );
-        console.log('DATA: ', data);
-        console.log('Data from Python model process');
-      })
-      .catch((error) => {
-        console.log(error);
-        console.log('Error from Python model process');
-      });
-    return {
-      message: 'Prediction created',
-    };
+    const plugins = await this.pluginsService.findPluginsByIds(
+      createPredictionDto.pluginsIds,
+    );
+    return await this.pythonModelProcessService.runPythonModelProcess(
+      plugins as any,
+    );
   }
 
   findAll() {

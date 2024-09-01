@@ -1,54 +1,48 @@
 import { Injectable } from '@nestjs/common';
 import { spawn } from 'child_process';
-import * as fs from 'fs';
+import { BedrockClient } from '@aws-sdk/client-bedrock';
+import {
+  BedrockRuntimeClient,
+  InvokeModelCommand,
+} from '@aws-sdk/client-bedrock-runtime';
 import * as path from 'path';
+import { Plugin } from '@prisma/client';
 
 @Injectable()
 export class PythonModelProcessService {
-  constructor() {}
-
-  public runPythonModelProcess() {
-    return new Promise((resolve, reject) => {
-      // Inicia o processo Python apontando para o arquivo do script
-      const process = spawn('python', [
-        path.resolve(__dirname, 'model/model.py'),
-      ]);
-
-      console.log('Python model process started');
-
-      // Converte os dados em JSON string para enviar via stdin
-      // const inputData = {
-      //   key: 'MT-5107578-9B63E4A411A14A2FADF0B31C90C0F9D0',
-      // };
-
-      const inputData = {
-        order_volume: 150,
-        food_inventory: 2000,
-        crop_yield: 5000,
-      };
-
-      // Escreve os dados no stdin do processo Python
-      process.stdin.write(JSON.stringify(inputData));
-      process.stdin.end(); // Encerra o stdin após escrever os dados
-
-      // Recebe dados do stdout do script Python
-      process.stdout.on('data', (data) => {
-        console.log(`stdout: ${data}`);
-        resolve(data.toString());
-      });
-
-      // Recebe erros do stderr do script Python
-      process.stderr.on('data', (data) => {
-        console.error(`stderr: ${data}`);
-        resolve(data.toString());
-      });
-
-      // Evento para quando o processo termina
-      process.on('close', (code) => {
-        resolve(`child process exited with code ${code}`);
-        console.log(`child process exited with code ${code}`);
-      });
+  private bedrockClient: BedrockRuntimeClient;
+  constructor() {
+    this.bedrockClient = new BedrockRuntimeClient({
+      region: 'us-west-2',
     });
+  }
+
+  public async runPythonModelProcess(plugins: Plugin[]) {
+    const mainModel = new BedrockRuntimeClient({
+      region: 'us-west-2',
+    });
+    const mainResponse = await mainModel.send(
+      new InvokeModelCommand({
+        modelId: 'antropic.claude-v2:1',
+        body: `{ "business_age": "10 years", "industry_sector": "Manufacturing", "company_size": 50, "annual_revenue": 5000000, "net_profit": 500000, "total_assets": 3000000, "total_liabilities": 1500000, "credit_score": 750, "payment_history": "On-time", "existing_debts": 200000, "loan_amount_requested": 300000, "purpose": "Expansion", "loan_term": 36 }`,
+      }),
+    );
+    const data = {
+      main: mainResponse.body,
+    };
+    for (let i = 0; i < plugins.length; i++) {
+      const alternativeModel = new BedrockRuntimeClient({
+        region: 'us-west-2',
+      });
+      const answer = await alternativeModel.send(
+        new InvokeModelCommand({
+          modelId: plugins[i].model,
+          body: `{ "business_age": "10 years", "industry_sector": "Manufacturing", "company_size": 50, "annual_revenue": 5000000, "net_profit": 500000, "total_assets": 3000000, "total_liabilities": 1500000, "credit_score": 750, "payment_history": "On-time", "existing_debts": 200000, "loan_amount_requested": 300000, "purpose": "Expansion", "loan_term": 36 }`,
+        }),
+      );
+      data[plugins[i].model];
+    }
+    return data;
   }
 }
 

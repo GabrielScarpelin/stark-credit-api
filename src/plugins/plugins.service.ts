@@ -93,5 +93,25 @@ export class PluginsService {
       });
     }
   }
+  async findPluginsByIds(ids: string[]) {
+    try {
+      const plugins = await this.prismaService.plugin.findMany({
+        where: {
+          id: {
+            in: ids,
+          },
+        },
+      });
+      return {
+        message: 'Plugins found successfully',
+        plugins,
+      };
+    } catch (error) {
+      console.error(error);
+      throw new HttpException('Error finding plugins', 400, {
+        description: error,
+      });
+    }
+  }
 }
 

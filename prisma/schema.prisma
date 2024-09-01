@@ -14,6 +14,9 @@ model Plugin {
   description  String
   version      String
   url          String       @unique
+  region       String       @default("us-west-2")
+  model        String       @default("antropic.claude-v 2:1")
+  hash         String       @default("alternative")
   imagePath    String
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt

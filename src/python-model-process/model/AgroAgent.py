@@ -5,7 +5,7 @@ def run():
     # requisição http para o meu microserviço
 
     # URL do microserviço
-    url = 'http://172.21.176.1:5000/predict'
+    url = 'http://localhost:5000/predict'
 
     # Realizando a requisição GET
     response = requests.post(url)
