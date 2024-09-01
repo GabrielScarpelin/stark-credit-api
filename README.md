@@ -57,6 +57,8 @@ Uma plataforma de análise de crédito especialista e modular, com diferentes pl
 4. Quando todos os plugins terminam a análise, a CREDITIA retorna o resultado da análise de crédito para o cliente através da conexão websocket
 5. O cliente recebe o resultado da análise de crédito e pode tomar a decisão de conceder ou não o crédito
 
+![Image](assets/arquitetura.jpg)
+
 ## Instalação
 
 Siga os passos abaixo para clonar o repositório e configurar o ambiente:
